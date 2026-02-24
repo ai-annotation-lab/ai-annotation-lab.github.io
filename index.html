@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Annotation Lab — Precision Ground Truth for Autonomous Systems</title>
+  <meta name="description" content="Enterprise-grade 2D annotation and synthetic pedestrian datasets for autonomous vehicles, robotics, and AI systems. Based in Germany. GDPR compliant." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:    #0a0f1e;
+      --navy2:   #0d1628;
+      --navy3:   #111d35;
+      --teal:    #00d4aa;
+      --teal2:   #00b896;
+      --blue:    #1a6cf5;
+      --white:   #f0f4ff;
+      --muted:   #7a8aaa;
+      --border:  rgba(255,255,255,0.07);
+      --card:    rgba(255,255,255,0.035);
+      --glow:    0 0 60px rgba(0,212,170,0.12);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--navy);
+      color: var(--white);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ── NOISE TEXTURE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.6;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 5%;
+      height: 68px;
+      background: rgba(10,15,30,0.85);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: -0.01em;
+      color: var(--white);
+      text-decoration: none;
+    }
+
+    .nav-logo span { color: var(--teal); }
+
+    .nav-links {
+      display: flex;
+      gap: 2.2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.03em;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--white); }
+
+    .nav-cta {
+      background: var(--teal);
+      color: var(--navy) !important;
+      padding: 0.45rem 1.1rem;
+      border-radius: 6px;
+      font-weight: 600 !important;
+      font-size: 0.82rem !important;
+      transition: background 0.2s !important;
+    }
+
+    .nav-cta:hover { background: var(--teal2) !important; color: var(--navy) !important; }
+
+    /* ── HERO ── */
+    #hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 120px 5% 80px;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 60% 40%, rgba(26,108,245,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 20% 70%, rgba(0,212,170,0.08) 0%, transparent 60%);
+    }
+
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent);
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 760px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(0,212,170,0.1);
+      border: 1px solid rgba(0,212,170,0.25);
+      color: var(--teal);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.9rem;
+      border-radius: 100px;
+      margin-bottom: 1.8rem;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .hero-badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: var(--teal);
+      border-radius: 50%;
+      animation: pulse 2s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.4); }
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.6rem, 5.5vw, 4.2rem);
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.4rem;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+
+    h1 em {
+      font-style: normal;
+      color: var(--teal);
+    }
+
+    .hero-sub {
+      font-size: 1.05rem;
+      font-weight: 300;
+      color: var(--muted);
+      max-width: 520px;
+      line-height: 1.7;
+      margin-bottom: 2.4rem;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+
+    .btn-primary {
+      background: var(--teal);
+      color: var(--navy);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 0.8rem 1.8rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary:hover {
+      background: var(--teal2);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 30px rgba(0,212,170,0.3);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 0.8rem 1.8rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-secondary:hover {
+      border-color: rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 3rem;
+      margin-top: 4rem;
+      padding-top: 2.5rem;
+      border-top: 1px solid var(--border);
+      animation: fadeUp 0.6s 0.4s ease both;
+      flex-wrap: wrap;
+    }
+
+    .stat-item { }
+
+    .stat-number {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1;
+    }
+
+    .stat-number span { color: var(--teal); }
+
+    .stat-label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 0.3rem;
+      letter-spacing: 0.03em;
+    }
+
+    /* ── SECTIONS ── */
+    section {
+      position: relative;
+      z-index: 1;
+      padding: 100px 5%;
+    }
+
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 0.8rem;
+    }
+
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+      margin-bottom: 1.2rem;
+    }
+
+    .section-sub {
+      font-size: 1rem;
+      color: var(--muted);
+      font-weight: 300;
+      max-width: 540px;
+      line-height: 1.7;
+    }
+
+    .section-header { margin-bottom: 4rem; }
+
+    /* ── SERVICES ── */
+    #services { background: var(--navy2); }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .service-card {
+      background: var(--navy2);
+      padding: 2.5rem;
+      transition: background 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .service-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--teal), var(--blue));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s ease;
+    }
+
+    .service-card:hover { background: var(--navy3); }
+    .service-card:hover::before { transform: scaleX(1); }
+
+    .service-icon {
+      width: 48px; height: 48px;
+      background: rgba(0,212,170,0.1);
+      border: 1px solid rgba(0,212,170,0.2);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      font-size: 1.4rem;
+    }
+
+    .service-card h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 0.8rem;
+      letter-spacing: -0.01em;
+    }
+
+    .service-card p {
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+    }
+
+    .service-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      padding: 0.25rem 0.65rem;
+      border-radius: 100px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .service-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--teal);
+      text-decoration: none;
+      margin-top: 1.5rem;
+      transition: gap 0.2s;
+    }
+
+    .service-link:hover { gap: 0.7rem; }
+
+    /* ── HOW IT WORKS ── */
+    #process { background: var(--navy); }
+
+    .process-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+
+    .process-step {
+      position: relative;
+      padding: 2rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+
+    .step-number {
+      font-family: 'Syne', sans-serif;
+      font-size: 3rem;
+      font-weight: 800;
+      color: rgba(0,212,170,0.12);
+      line-height: 1;
+      margin-bottom: 1rem;
+    }
+
+    .process-step h4 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+    }
+
+    .process-step p {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* ── WHY US ── */
+    #why { background: var(--navy2); }
+
+    .why-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .why-points { display: flex; flex-direction: column; gap: 1.5rem; }
+
+    .why-point {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      padding: 1.4rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      transition: border-color 0.3s, background 0.3s;
+    }
+
+    .why-point:hover {
+      border-color: rgba(0,212,170,0.25);
+      background: rgba(0,212,170,0.04);
+    }
+
+    .why-icon {
+      font-size: 1.4rem;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+
+    .why-point h4 {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+    }
+
+    .why-point p {
+      font-size: 0.83rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .why-visual {
+      background: var(--navy3);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .why-visual::before {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(0,212,170,0.15), transparent 70%);
+    }
+
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .metric-row:last-child { border-bottom: none; }
+
+    .metric-label {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .metric-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--teal);
+    }
+
+    .metric-bar-wrap {
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 2px;
+      margin-top: 0.4rem;
+      overflow: hidden;
+    }
+
+    .metric-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--teal), var(--blue));
+      border-radius: 2px;
+      animation: growBar 1.5s ease both;
+    }
+
+    @keyframes growBar {
+      from { width: 0; }
+    }
+
+    /* ── INDUSTRIES ── */
+    #industries { background: var(--navy); }
+
+    .industries-scroll {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 2.5rem;
+    }
+
+    .industry-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.65rem 1.2rem;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--muted);
+      transition: all 0.2s;
+      cursor: default;
+    }
+
+    .industry-pill:hover {
+      border-color: rgba(0,212,170,0.3);
+      color: var(--white);
+      background: rgba(0,212,170,0.06);
+    }
+
+    .industry-pill span { font-size: 1rem; }
+
+    /* ── CONTACT ── */
+    #contact { background: var(--navy2); }
+
+    .contact-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 5rem;
+      align-items: start;
+    }
+
+    .contact-info h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      margin-bottom: 1rem;
+    }
+
+    .contact-info p {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 2rem;
+    }
+
+    .contact-detail {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.8rem;
+    }
+
+    .contact-detail strong { color: var(--white); }
+
+    .contact-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+
+    .form-group label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: rgba(0,212,170,0.4);
+    }
+
+    .form-group select option { background: var(--navy2); }
+
+    .form-group textarea { resize: vertical; min-height: 110px; }
+
+    .form-note {
+      font-size: 0.75rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--navy);
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 5%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .footer-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1rem;
+      color: var(--white);
+      text-decoration: none;
+    }
+
+    .footer-logo span { color: var(--teal); }
+
+    .footer-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .footer-links a {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--white); }
+
+    .footer-copy {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-up {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .fade-up.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .why-grid { grid-template-columns: 1fr; }
+      .contact-wrap { grid-template-columns: 1fr; gap: 2.5rem; }
+      .form-row { grid-template-columns: 1fr; }
+      .hero-stats { gap: 1.5rem; }
+      footer { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#" class="nav-logo">AI <span>Annotation</span> Lab</a>
+    <ul class="nav-links">
+      <li><a href="#services">Services</a></li>
+      <li><a href="#process">Process</a></li>
+      <li><a href="#why">Why Us</a></li>
+      <li><a href="#industries">Industries</a></li>
+      <li><a href="#contact" class="nav-cta">Get Quote</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <div class="hero-badge">Stuttgart, Germany &nbsp;·&nbsp; GDPR Compliant</div>
+      <h1>
+        <em>High-Precision</em><br />
+        Ground Truth for<br />
+        Autonomous Systems
+      </h1>
+      <p class="hero-sub">
+        Enterprise-grade 2D annotation and synthetic pedestrian datasets for autonomous vehicles, robotics, and industrial AI. Powered by AI-assisted pipelines. Delivered fast.
+      </p>
+      <div class="hero-actions">
+        <a href="#contact" class="btn-primary">Get a Free Quote →</a>
+        <a href="#services" class="btn-secondary">View Services</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <div class="stat-number">100k<span>+</span></div>
+          <div class="stat-label">Images per project</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">3<span>x</span></div>
+          <div class="stat-label">Faster than manual</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">COCO<span> · </span>YOLO<span> · </span>VOC</div>
+          <div class="stat-label">Export formats</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">24<span>h</span></div>
+          <div class="stat-label">Response time</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section id="services">
+    <div class="section-header fade-up">
+      <div class="section-label">Core Services</div>
+      <h2 class="section-title">What We Deliver</h2>
+      <p class="section-sub">Three specialised services built around the needs of autonomous perception and robotics teams.</p>
+    </div>
+    <div class="services-grid fade-up">
+
+      <div class="service-card">
+        <div class="service-icon">🎯</div>
+        <h3>2D Bounding Box Annotation</h3>
+        <p>Enterprise-grade labeling engineered for robotics and autonomous perception. Consistent, high-accuracy bounding boxes across complex urban scenes with automated QA.</p>
+        <div class="service-tags">
+          <span class="tag">YOLO</span>
+          <span class="tag">COCO JSON</span>
+          <span class="tag">Pascal VOC</span>
+          <span class="tag">Multi-class</span>
+          <span class="tag">QA Verified</span>
+        </div>
+        <a href="#contact" class="service-link">Talk to an Engineer →</a>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">🧬</div>
+        <h3>Synthetic Pedestrian Datasets</h3>
+        <p>Scalable synthetic pipeline generating diverse, scene-aware pedestrian datasets with pixel-perfect ground truth. GDPR compliant by design — no real people, no consent issues.</p>
+        <div class="service-tags">
+          <span class="tag">GDPR Compliant</span>
+          <span class="tag">100k+ Images</span>
+          <span class="tag">Pose Variety</span>
+          <span class="tag">Auto-annotated</span>
+        </div>
+        <a href="#contact" class="service-link">Talk to an Engineer →</a>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">⚡</div>
+        <h3>Model-Assisted Annotation</h3>
+        <p>Hybrid workflow combining AI pre-labeling with human verification. Built for teams that need fast iteration, high throughput, and production-level dataset quality at scale.</p>
+        <div class="service-tags">
+          <span class="tag">AI Pre-label</span>
+          <span class="tag">Human QA</span>
+          <span class="tag">High Throughput</span>
+          <span class="tag">Fast Turnaround</span>
+        </div>
+        <a href="#contact" class="service-link">Talk to an Engineer →</a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- PROCESS -->
+  <section id="process">
+    <div class="section-header fade-up">
+      <div class="section-label">How It Works</div>
+      <h2 class="section-title">From Brief to Dataset in Days</h2>
+      <p class="section-sub">A streamlined four-step pipeline designed for engineering teams who need reliable results fast.</p>
+    </div>
+    <div class="process-steps fade-up">
+      <div class="process-step">
+        <div class="step-number">01</div>
+        <h4>Project Scoping</h4>
+        <p>You describe your dataset requirements — classes, volume, format, edge cases. We scope and confirm within 24 hours.</p>
+      </div>
+      <div class="process-step">
+        <div class="step-number">02</div>
+        <h4>AI Pre-labeling</h4>
+        <p>Our YOLOv5-powered pipeline automatically pre-annotates your images, reducing manual effort by up to 80%.</p>
+      </div>
+      <div class="process-step">
+        <div class="step-number">03</div>
+        <h4>Quality Verification</h4>
+        <p>Every annotation passes multi-level QA review. Consistency checks, edge case validation, format verification.</p>
+      </div>
+      <div class="process-step">
+        <div class="step-number">04</div>
+        <h4>Delivery & Support</h4>
+        <p>Dataset delivered in your required format. Revision rounds included. Technical support available post-delivery.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY US -->
+  <section id="why">
+    <div class="why-grid">
+      <div class="fade-up">
+        <div class="section-label">Why AI Annotation Lab</div>
+        <h2 class="section-title">Built for Engineering Teams</h2>
+        <p class="section-sub" style="margin-bottom: 2.5rem;">Not a generic outsourcing agency. A technical partner that understands autonomous perception.</p>
+        <div class="why-points">
+          <div class="why-point">
+            <div class="why-icon">🇩🇪</div>
+            <div>
+              <h4>Based in Germany, GDPR Native</h4>
+              <p>Full GDPR compliance built in. Same legal jurisdiction as your team. EU data never leaves EU infrastructure.</p>
+            </div>
+          </div>
+          <div class="why-point">
+            <div class="why-icon">⚡</div>
+            <div>
+              <h4>AI-Accelerated Pipeline</h4>
+              <p>We use the same tools your team uses — CVAT, YOLOv5, automated QA. Faster delivery, consistent quality.</p>
+            </div>
+          </div>
+          <div class="why-point">
+            <div class="why-icon">🎯</div>
+            <div>
+              <h4>Automotive & Robotics Specialist</h4>
+              <p>Deep focus on pedestrian detection, urban scenes, and safety-critical annotation. Not generalist labeling.</p>
+            </div>
+          </div>
+          <div class="why-point">
+            <div class="why-icon">🔬</div>
+            <div>
+              <h4>Synthetic Data Advantage</h4>
+              <p>Generate unlimited labeled training data without real-world collection. Covers rare edge cases real data cannot.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="why-visual fade-up">
+        <div class="section-label" style="margin-bottom: 1.5rem;">Pipeline Performance</div>
+        <div class="metric-row">
+          <div>
+            <div class="metric-label">Annotation Accuracy</div>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width: 96%"></div></div>
+          </div>
+          <div class="metric-value">96%</div>
+        </div>
+        <div class="metric-row">
+          <div>
+            <div class="metric-label">AI Pre-label Coverage</div>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width: 85%"></div></div>
+          </div>
+          <div class="metric-value">85%</div>
+        </div>
+        <div class="metric-row">
+          <div>
+            <div class="metric-label">Export Format Support</div>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width: 100%"></div></div>
+          </div>
+          <div class="metric-value">COCO · YOLO · VOC</div>
+        </div>
+        <div class="metric-row">
+          <div>
+            <div class="metric-label">Typical Turnaround</div>
+          </div>
+          <div class="metric-value">3–5 days</div>
+        </div>
+        <div class="metric-row">
+          <div>
+            <div class="metric-label">Free Pilot Available</div>
+          </div>
+          <div class="metric-value" style="color: var(--teal);">500 images</div>
+        </div>
+        <div class="metric-row">
+          <div>
+            <div class="metric-label">Response Time</div>
+          </div>
+          <div class="metric-value">24 hours</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INDUSTRIES -->
+  <section id="industries">
+    <div class="section-header fade-up">
+      <div class="section-label">Industries Served</div>
+      <h2 class="section-title">Who We Work With</h2>
+    </div>
+    <div class="industries-scroll fade-up">
+      <div class="industry-pill"><span>🚗</span> Autonomous Vehicles</div>
+      <div class="industry-pill"><span>🤖</span> Robotics & Automation</div>
+      <div class="industry-pill"><span>🏭</span> Industrial Safety</div>
+      <div class="industry-pill"><span>🏙️</span> Smart Cities</div>
+      <div class="industry-pill"><span>🔬</span> AI Research Labs</div>
+      <div class="industry-pill"><span>🌐</span> Simulation & Digital Twins</div>
+      <div class="industry-pill"><span>🚦</span> Traffic Management</div>
+      <div class="industry-pill"><span>📦</span> Warehouse Logistics</div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="contact-wrap">
+      <div class="contact-info fade-up">
+        <div class="section-label">Start a Project</div>
+        <h2>Let's Build Your Dataset</h2>
+        <p>Connect with our engineers to scope your dataset needs or launch a free pilot. We respond within 24 hours.</p>
+        <div class="contact-detail">
+          <span>📍</span>
+          <span><strong>Stuttgart, Germany</strong> — Serving EU clients</span>
+        </div>
+        <div class="contact-detail">
+          <span>⏱️</span>
+          <span>Response within <strong>24 hours</strong></span>
+        </div>
+        <div class="contact-detail">
+          <span>🎁</span>
+          <span><strong>Free pilot</strong> — 500 images, no commitment</span>
+        </div>
+        <div class="contact-detail">
+          <span>🔒</span>
+          <span><strong>GDPR compliant</strong> — EU data stays in EU</span>
+        </div>
+      </div>
+
+      <form class="contact-form fade-up" onsubmit="handleSubmit(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label>First Name *</label>
+            <input type="text" placeholder="Thomas" required />
+          </div>
+          <div class="form-group">
+            <label>Last Name *</label>
+            <input type="text" placeholder="Müller" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Work Email *</label>
+          <input type="email" placeholder="thomas@company.de" required />
+        </div>
+        <div class="form-group">
+          <label>Company *</label>
+          <input type="text" placeholder="Bosch, Mercedes, YourStartup..." required />
+        </div>
+        <div class="form-group">
+          <label>Service Needed</label>
+          <select>
+            <option value="">Select a service...</option>
+            <option>2D Bounding Box Annotation</option>
+            <option>Synthetic Pedestrian Dataset</option>
+            <option>Model-Assisted Annotation Pipeline</option>
+            <option>Not sure — need consultation</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Project Details</label>
+          <textarea placeholder="Describe your dataset requirements — image volume, classes, formats needed, timeline..."></textarea>
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">
+          Send Message →
+        </button>
+        <div class="form-note">🔒 Your data is handled under GDPR. We never share it.</div>
+      </form>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <a href="#" class="footer-logo">AI <span>Annotation</span> Lab</a>
+    <ul class="footer-links">
+      <li><a href="#services">Services</a></li>
+      <li><a href="#process">Process</a></li>
+      <li><a href="#contact">Contact</a></li>
+      <li><a href="#impressum">Impressum</a></li>
+    </ul>
+    <div class="footer-copy">© 2026 AI Annotation Lab. Stuttgart, Germany.</div>
+  </footer>
+
+  <!-- IMPRESSUM (required by German law) -->
+  <section id="impressum" style="background: var(--navy); padding: 60px 5%;">
+    <div style="max-width: 600px;">
+      <h3 style="font-family: 'Syne', sans-serif; font-size: 1.2rem; margin-bottom: 1rem; color: var(--muted);">Impressum</h3>
+      <p style="font-size: 0.8rem; color: var(--muted); line-height: 1.8;">
+        <strong style="color: var(--white);">Angaben gemäß § 5 TMG</strong><br />
+        [Your Full Name]<br />
+        [Your Street Address]<br />
+        [Postcode] Stuttgart, Germany<br /><br />
+        <strong style="color: var(--white);">Kontakt</strong><br />
+        E-Mail: hello@aiannotationlab.de<br /><br />
+        <em>Please update this section with your real name and address. Required by German law.</em>
+      </p>
+    </div>
+  </section>
+
+  <script>
+    // Scroll animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+    // Form handler
+    function handleSubmit(e) {
+      e.preventDefault();
+      const btn = e.target.querySelector('button[type="submit"]');
+      btn.textContent = '✓ Message Sent — We will reply within 24 hours';
+      btn.style.background = 'var(--teal2)';
+      btn.disabled = true;
+    }
+
+    // Smooth nav highlight
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.nav-links a');
+
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(s => {
+        if (window.scrollY >= s.offsetTop - 100) current = s.id;
+      });
+      navLinks.forEach(a => {
+        a.style.color = a.getAttribute('href') === '#' + current ? 'var(--white)' : '';
+      });
+    });
+  </script>
+
+</body>
+</html>
